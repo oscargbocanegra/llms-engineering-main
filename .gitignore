@@ -78,6 +78,10 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# Gradio
+.gradio/
+flagged/
+
 # IPython
 profile_default/
 ipython_config.py
