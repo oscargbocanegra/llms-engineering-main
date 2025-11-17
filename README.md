@@ -42,8 +42,34 @@ The program is organized into **8 hands-on projects**, each demonstrating advanc
 
 ---
 
-### Project 2: AI-Powered Brochure Generator
-**Status:** 🚧 Coming Soon  
+### Project 2: FlightAI - Multimodal Airline Assistant
+**Status:** ✅ Completed  
+**Skills Demonstrated:**
+- Function calling with tool execution
+- Multimodal AI (text, images, voice)
+- Real-time audio transcription with Whisper
+- Text-to-speech with speed control
+- Context-aware image generation
+- Interactive web UI with Gradio
+- Voice input integration
+
+**Project Highlights:**
+- Built a professional multimodal customer service assistant for airlines
+- Implemented 4 automated tools: ticket pricing, reservations, translation, audio transcription
+- Integrated DeepSeek-V3.1 671B for natural language conversations with function calling
+- Free image generation using Pollinations.AI for destination previews
+- Voice interaction: microphone input → Whisper transcription → chat processing → TTS response
+- Gradio interface with chat, image display, and audio playback
+- Adjustable audio speed (1.1x) for faster responses
+
+**Technologies:** `Python` `OpenAI Whisper` `gTTS` `Gradio` `Ollama DeepSeek` `Pollinations.AI` `pydub` `Function Calling`
+
+[📂 View Project](./week2-Project2.ipynb)
+
+---
+
+### Project 3: AI-Powered Brochure Generator
+**Status:** 📋 Planned  
 **Course Objective:** *Build an AI brochure generator that intelligently scrapes and navigates company websites*
 
 **Planned Skills:**
@@ -54,21 +80,6 @@ The program is organized into **8 hands-on projects**, each demonstrating advanc
 - Automated brochure formatting
 
 **Planned Technologies:** `BeautifulSoup` `Selenium` `OpenAI GPT-4` `Web Scraping APIs`
-
----
-
-### Project 3: Multimodal Customer Service Agent for Airlines
-**Status:** 📋 Planned  
-**Course Objective:** *Create a multimodal customer service agent for an airline with UI and function calling*
-
-**Planned Skills:**
-- Multimodal AI (text, images, voice)
-- Function calling with OpenAI
-- Customer service automation
-- User interface development
-- API integration for booking systems
-
-**Planned Technologies:** `OpenAI GPT-4V` `Function Calling` `Gradio` `FastAPI` `Audio Processing`
 
 ---
 
@@ -215,6 +226,10 @@ OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_API_KEY=ollama
 OLLAMA_MODEL=llama3.2
 
+# Ollama Cloud (for DeepSeek-V3.1)
+OLLAMA_BASE_URL=https://cloud.ollamaapi.com
+OLLAMA_API_KEY=your_ollama_cloud_key
+
 # Provider Selection
 LLM_PROVIDER=ollama  # or 'openai'
 ```
@@ -226,13 +241,13 @@ LLM_PROVIDER=ollama  # or 'openai'
 ```
 llms-engineering-main/
 ├── week1-Project1.ipynb          # Week 1: Personalized Programming Tutor
-├── week2-Project2.ipynb          # Week 2: Advanced RAG System (Coming Soon)
-├── week3-Project3.ipynb          # Week 3: Multi-Agent System (Planned)
-├── week4-Project4.ipynb          # Week 4: Function Calling (Planned)
-├── week5-Project5.ipynb          # Week 5: Fine-Tuning (Planned)
-├── week6-Project6.ipynb          # Week 6: Production Deployment (Planned)
-├── week7-Project7.ipynb          # Week 7: Advanced Prompting (Planned)
-├── week8-Project8.ipynb          # Week 8: Autonomous Agents (Planned)
+├── week2-Project2.ipynb          # Week 2: FlightAI - Multimodal Airline Assistant
+├── week3-Project3.ipynb          # Week 3: AI Brochure Generator (Planned)
+├── week4-Project4.ipynb          # Week 4: Meeting Minutes Generator (Planned)
+├── week5-Project5.ipynb          # Week 5: Python to C++ Optimizer (Planned)
+├── week6-Project6.ipynb          # Week 6: RAG Knowledge Worker (Planned)
+├── week7-Project7.ipynb          # Week 7: Price Prediction (Planned)
+├── week8-Project8.ipynb          # Week 8: Multi-Agent Deal Detection (Planned)
 ├── requirements.txt              # Python dependencies
 ├── .env.example                  # Environment variables template
 └── README.md                     # This file
@@ -256,6 +271,27 @@ yield from {book.get("author") for book in books if book.get("author")}
 # - Step-by-step breakdown
 # - Why use this approach
 # - Important concepts involved
+```
+
+### Week 2 - FlightAI Assistant
+
+```python
+# Launch the Gradio interface by executing all cells
+# Three interaction modes:
+
+# 1. Text Input:
+"What's the price to Paris?"
+# → Assistant calls get_ticket_price tool
+# → Generates image of Paris
+# → Responds with audio
+
+# 2. Voice Input:
+# Click microphone → speak your question → auto-transcription
+# → Same processing as text input
+
+# 3. Example queries:
+"Make a reservation for John Doe to Tokyo on 2025-12-01"
+"Translate 'Hello' to Spanish"
 ```
 
 ---
@@ -370,5 +406,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Last Updated:** November 2025  
-**Program Status:** Project 1 Completed | 7 Projects Remaining
+**Program Status:** Projects 1-2 Completed | 6 Projects Remaining
 
