@@ -68,18 +68,31 @@ The program is organized into **8 hands-on projects**, each demonstrating advanc
 
 ---
 
-### Project 3: AI-Powered Brochure Generator
-**Status:** 📋 Planned  
-**Course Objective:** *Build an AI brochure generator that intelligently scrapes and navigates company websites*
+### Project 3: Synthetic Data Studio - AI-Powered Dataset Generator
+**Status:** ✅ Completed  
+**Skills Demonstrated:**
+- Model quantization (4-bit) with BitsAndBytes
+- Local LLM deployment and optimization
+- Structured prompt engineering for data generation
+- Schema-driven AI outputs
+- GPU memory management
+- Pandas DataFrame manipulation
+- Interactive web UI with Gradio
+- Data validation and quality checks
 
-**Planned Skills:**
-- Web scraping and navigation
-- Intelligent content extraction
-- Multi-page data aggregation
-- Generative AI for content creation
-- Automated brochure formatting
+**Project Highlights:**
+- Built a production-ready synthetic data generator using Llama 3.1 8B (quantized to 4-bit)
+- Implemented 3 business domain templates: Retail Sales, Bank Transactions, Customer Support
+- Schema-driven generation with strict column specifications and data type constraints
+- Automatic CSV parsing with robust error handling for LLM output quirks
+- Quality validation: checks for missing columns, extra columns, and row count accuracy
+- Memory-optimized inference with automatic GPU cache cleanup
+- Gradio interface with schema selection, row count slider, and CSV download
+- Running 8B parameter models on consumer GPUs (4GB VRAM vs 32GB required for FP32)
 
-**Planned Technologies:** `BeautifulSoup` `Selenium` `OpenAI GPT-4` `Web Scraping APIs`
+**Technologies:** `Python` `Hugging Face Transformers` `Llama 3.1 8B` `BitsAndBytes` `Gradio` `Pandas` `PyTorch` `4-bit Quantization`
+
+[📂 View Project](./Project3-week3.ipynb)
 
 ---
 
@@ -240,9 +253,9 @@ LLM_PROVIDER=ollama  # or 'openai'
 
 ```
 llms-engineering-main/
-├── week1-Project1.ipynb          # Week 1: Personalized Programming Tutor
-├── week2-Project2.ipynb          # Week 2: FlightAI - Multimodal Airline Assistant
-├── week3-Project3.ipynb          # Week 3: AI Brochure Generator (Planned)
+├── Project1-week1.ipynb          # Week 1: Personalized Programming Tutor
+├── Project2-week2.ipynb          # Week 2: FlightAI - Multimodal Airline Assistant
+├── Project3-week3.ipynb          # Week 3: Synthetic Data Studio
 ├── week4-Project4.ipynb          # Week 4: Meeting Minutes Generator (Planned)
 ├── week5-Project5.ipynb          # Week 5: Python to C++ Optimizer (Planned)
 ├── week6-Project6.ipynb          # Week 6: RAG Knowledge Worker (Planned)
@@ -294,6 +307,33 @@ yield from {book.get("author") for book in books if book.get("author")}
 "Translate 'Hello' to Spanish"
 ```
 
+### Week 3 - Synthetic Data Studio
+
+```python
+# Launch the Gradio interface by executing all cells
+# Configure your synthetic dataset:
+
+# 1. Select Dataset Type (dropdown):
+"Retail Sales"  # or "Bank Transactions", "Customer Support Tickets"
+
+# 2. Set Row Count (slider):
+100  # Between 10 and 1000 rows
+
+# 3. Add Custom Instructions (optional):
+"Generate 10% fraudulent transactions"
+"Ensure balanced distribution across countries"
+
+# Click "Generate Synthetic Data 🚀"
+# → LLM constructs dataset according to schema
+# → Output parsed to pandas DataFrame
+# → Quality validation performed
+# → CSV file ready for download
+
+# Example generated columns (Retail Sales):
+# order_id, order_date, customer_id, country, product_category,
+# unit_price, quantity, total_amount, is_fraud
+```
+
 ---
 
 ## Technical Highlights
@@ -307,6 +347,12 @@ yield from {book.get("author") for book in books if book.get("author")}
 - Seamless switching between OpenAI and Ollama
 - Unified interface for different LLM backends
 - Cost optimization with local models
+
+### Model Quantization & Optimization
+- 4-bit quantization using BitsAndBytes (8GB → 4GB VRAM)
+- Local deployment of billion-parameter models on consumer hardware
+- GPU memory management and cache optimization
+- Automatic device mapping for multi-GPU setups
 
 ### Production Considerations
 - Environment-based configuration
@@ -405,6 +451,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Last Updated:** November 2025  
-**Program Status:** Projects 1-2 Completed | 6 Projects Remaining
+**Last Updated:** December 2025  
+**Program Status:** Projects 1-3 Completed | 5 Projects Remaining
 
