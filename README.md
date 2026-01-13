@@ -45,7 +45,7 @@ The program is organized into **8 hands-on projects**, each demonstrating advanc
 ### Project 2: FlightAI - Multimodal Airline Assistant
 **Status:** ✅ Completed  
 **Skills Demonstrated:**
-- Function calling with tool execution
+- Function calling with tool execution.
 - Multimodal AI (text, images, voice)
 - Real-time audio transcription with Whisper
 - Text-to-speech with speed control
