@@ -38,7 +38,7 @@ The program is organized into **8 hands-on projects**, each demonstrating advanc
 
 **Technologies:** `Python` `OpenAI API` `Ollama` `IPython` `Markdown`
 
-[📂 View Project](./week1-Project1.ipynb)
+[📂 View Project](./Project1-week1.ipynb)
 
 ---
 
@@ -64,7 +64,7 @@ The program is organized into **8 hands-on projects**, each demonstrating advanc
 
 **Technologies:** `Python` `OpenAI Whisper` `gTTS` `Gradio` `Ollama DeepSeek` `Pollinations.AI` `pydub` `Function Calling`
 
-[📂 View Project](./week2-Project2.ipynb)
+[📂 View Project](./Project2-week2.ipynb)
 
 ---
 
@@ -112,17 +112,28 @@ The program is organized into **8 hands-on projects**, each demonstrating advanc
 ---
 
 ### Project 5: Python to C++ AI Optimizer
-**Status:** 📋 Planned  
-**Course Objective:** *Create an AI that converts Python code to optimized C++, increasing performance by 60,000x!*
+### Project 5: Private Knowledge Chatbot (RAG)
+**Status:** ✅ Completed  
+**Objective:** *Build a learning-focused RAG chatbot that answers questions using a private local knowledge base (PDFs) and a vector database.*
 
-**Planned Skills:**
-- Code translation
-- Performance optimization
-- Language model fine-tuning for code
-- Benchmarking and testing
-- Compilation optimization
+**Skills Demonstrated:**
+- Document ingestion from a local knowledge base
+- Chunking strategy (overlap + size trade-offs)
+- Embeddings creation (OpenAI by default, HuggingFace optional)
+- Vector database persistence with Chroma
+- Conversational retrieval (LangChain) with memory
+- Rapid prototyping with Gradio ChatInterface
+- Embedding-space debugging via t-SNE (2D + 3D)
 
-**Planned Technologies:** `GPT-4` `Code Llama` `C++ Compilers` `Performance Profiling`
+**Project Highlights:**
+- Loads PDFs from `knowledge-base/`, splits them into chunks, and indexes them into `vector_db/`
+- Retrieves top-$k$ relevant chunks per question and grounds the response on retrieved context
+- Provides a simple interactive chat UI to validate behavior like an end user
+- Includes visualization to build intuition and detect outliers in the vector store
+
+**Technologies:** `Python` `LangChain` `ChromaDB` `OpenAI` `Gradio` `Plotly` `scikit-learn` `RAG`
+
+[📂 View Project](./Project5-week5.ipynb)
 
 ---
 
@@ -211,24 +222,19 @@ python -m venv llms-env
 source llms-env/bin/activate  # On Windows: llms-env\Scripts\activate
 ```
 
-### Installation
+### How to run (notebook-first workflow)
 
-```bash
-# Clone repository
-git clone https://github.com/oscargbocanegra/llms-engineering-main.git
-cd llms-engineering-main
+This repository is primarily **Jupyter notebooks**. The recommended workflow is:
 
-# Install dependencies
-pip install -r requirements.txt
+1) Open the project notebook (e.g., `Project5-week5.ipynb`) in VS Code or Jupyter.
+2) Ensure your Python environment has the required packages (install them *from the notebook* if needed).
+3) Run the cells top-to-bottom.
 
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your API keys
-```
+> Note: There is no `requirements.txt` at the repository root. Dependencies are typically installed from within notebooks as you work through the program.
 
 ### Configuration
 
-Create a `.env` file in the workspace root:
+Create a `.env` file (recommended location for container-based notebooks: `/workspace/.env`).
 
 ```env
 # OpenAI Configuration
@@ -256,15 +262,22 @@ llms-engineering-main/
 ├── Project1-week1.ipynb          # Week 1: Personalized Programming Tutor
 ├── Project2-week2.ipynb          # Week 2: FlightAI - Multimodal Airline Assistant
 ├── Project3-week3.ipynb          # Week 3: Synthetic Data Studio
-├── week4-Project4.ipynb          # Week 4: Meeting Minutes Generator (Planned)
-├── week5-Project5.ipynb          # Week 5: Python to C++ Optimizer (Planned)
-├── week6-Project6.ipynb          # Week 6: RAG Knowledge Worker (Planned)
-├── week7-Project7.ipynb          # Week 7: Price Prediction (Planned)
-├── week8-Project8.ipynb          # Week 8: Multi-Agent Deal Detection (Planned)
-├── requirements.txt              # Python dependencies
-├── .env.example                  # Environment variables template
+├── Project5-week5.ipynb          # Week 5: Private Knowledge Chatbot (RAG)
+├── knowledge-base/               # Local documents used for RAG (PDFs)
+├── vector_db/                    # Local Chroma persistence (generated)
+├── week5/                        # Week 5 lessons + additional KB/DB assets
 └── README.md                     # This file
 ```
+
+---
+
+## Week 5 — What I learned
+
+- How to build a complete RAG loop: **ingest → chunk → embed → store → retrieve → generate**
+- Why chunking matters (size/overlap trade-offs) and how it affects retrieval quality and cost
+- How Chroma persists embeddings locally and how to keep experiments repeatable
+- How to prototype a usable chatbot UI quickly with Gradio
+- How embedding visualizations (t-SNE) can help debug indexing issues (outliers, empty chunks, odd clusters)
 
 ---
 
@@ -452,5 +465,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Last Updated:** December 2025  
-**Program Status:** Projects 1-3 Completed | 5 Projects Remaining
+**Last Updated:** January 2026  
+**Program Status:** Projects 1-3 & 5 Completed | 4 Projects Remaining
 
