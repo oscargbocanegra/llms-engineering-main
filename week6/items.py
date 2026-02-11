@@ -2,7 +2,7 @@ from typing import Optional
 from transformers import AutoTokenizer
 import re
 
-BASE_MODEL = "qwen2.5:14b-instruct-q4_K_M"
+BASE_MODEL = "Qwen/Qwen2.5-14B-Instruct"
 
 MIN_TOKENS = 150 # Any less than this, and we don't have enough useful content
 MAX_TOKENS = 160 # Truncate after this many tokens. Then after adding in prompt text, we will get to around 180 tokens
