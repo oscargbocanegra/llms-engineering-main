@@ -1,5 +1,15 @@
 {
     "projectManager.git.baseFolders": [
         "D:\\github-repos"
-    ]
+    ],
+    "rainbow_csv.highlight_rows": true,
+    "rainbow_csv.enable_context_menu_head": true,
+    "rainbow_csv.virtual_alignment_mode": "disabled",
+    "rainbow_csv.virtual_alignment_vertical_grid": true,
+    "rainbow_csv.enable_auto_csv_lint": true,
+    "rainbow_csv.double_width_alignment": true,
+    "rainbow_csv.enable_cursor_position_info": true,
+    "rainbow_csv.enable_tooltip_column_names": true,
+    "rainbow_csv.enable_tooltip": true,
+    "rainbow_csv.csv_lint_detect_trailing_spaces": true
 }
