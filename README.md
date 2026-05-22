@@ -126,9 +126,9 @@ Project5-week5.ipynb       Private RAG chatbot
 
 week1/ ... week6/          Supporting weekly experiments and exploratory work
 knowledge-base/            Example private knowledge artifacts
-vector_db/                 Current local vector database artifacts
-iframe_figures/            Visualization outputs
 ```
+
+Generated vector stores, visualization exports, audio outputs, and local caches are treated as reproducible demo artifacts and should not define the public signal of the repository.
 
 ---
 
@@ -202,8 +202,8 @@ This repository is still partially **notebook-first** and contains some generate
 Current limitations include:
 
 - core logic is still concentrated in notebooks instead of extracted modules
-- some generated files are versioned for demonstration purposes
 - reproducibility and packaging can be improved
+- some demonstrations still rely on local/generated artifacts that should stay out of the flagship story
 - not all ideas are implemented as polished case studies yet
 
 That said, the strongest completed artifacts already provide meaningful public proof of applied LLM engineering work.

@@ -78,6 +78,14 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# Generated demo artifacts / local caches
+iframe_figures/
+vector_db/
+week5/vector_db/
+week2/*.mp3
+week2/*.wav
+week6/*.pkl
+
 # Gradio
 .gradio/
 flagged/
