@@ -58,6 +58,7 @@ This repository originated from structured training material, but it has been re
 
 **Main artifact**
 - [`Project3-week3.ipynb`](./Project3-week3.ipynb)
+- Reusable extraction: `src/llm_portfolio/synthetic_data_studio/`
 
 ---
 
@@ -126,6 +127,7 @@ Project5-week5.ipynb       Private RAG chatbot
 
 week1/ ... week6/          Supporting weekly experiments and exploratory work
 knowledge-base/            Example private knowledge artifacts
+src/llm_portfolio/         Reusable code extracted from flagship case studies
 ```
 
 Generated vector stores, visualization exports, audio outputs, and local caches are treated as reproducible demo artifacts and should not define the public signal of the repository.
@@ -201,7 +203,7 @@ This repository is still partially **notebook-first** and contains some generate
 
 Current limitations include:
 
-- core logic is still concentrated in notebooks instead of extracted modules
+- most core logic is still concentrated in notebooks, although extraction has started for Synthetic Data Studio under `src/llm_portfolio/`
 - reproducibility and packaging can be improved
 - some demonstrations still rely on local/generated artifacts that should stay out of the flagship story
 - not all ideas are implemented as polished case studies yet
