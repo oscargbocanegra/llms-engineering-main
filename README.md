@@ -79,6 +79,7 @@ This repository originated from structured training material, but it has been re
 
 **Main artifact**
 - [`Project5-week5.ipynb`](./Project5-week5.ipynb)
+- Reusable extraction: `src/llm_portfolio/private_rag_chatbot/`
 
 ---
 
@@ -128,6 +129,8 @@ Project5-week5.ipynb       Private RAG chatbot
 week1/ ... week6/          Supporting weekly experiments and exploratory work
 knowledge-base/            Example private knowledge artifacts
 src/llm_portfolio/         Reusable code extracted from flagship case studies
+examples/                  Lightweight smoke scripts for extracted modules
+tests/                     Minimal tests for reusable extractions
 ```
 
 Generated vector stores, visualization exports, audio outputs, and local caches are treated as reproducible demo artifacts and should not define the public signal of the repository.
@@ -184,16 +187,23 @@ source llms-env/bin/activate  # On Windows: llms-env\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### Reusable module smoke example
+### Reusable module smoke examples
 
 ```bash
 python examples/synthetic_data_studio_smoke.py
+python examples/private_rag_chatbot_smoke.py
 ```
 
 ### Packaging
 
 ```bash
 pip install -e .
+```
+
+For the full private RAG workflow and notebook dependencies:
+
+```bash
+pip install -e .[rag]
 ```
 
 ### Configuration
@@ -216,7 +226,7 @@ This repository is still partially **notebook-first** and contains some generate
 
 Current limitations include:
 
-- most core logic is still concentrated in notebooks, although extraction has started for Synthetic Data Studio under `src/llm_portfolio/`
+- most core logic is still concentrated in notebooks, although extraction has started for Synthetic Data Studio and the Private Knowledge Chatbot under `src/llm_portfolio/`
 - reproducibility and packaging can be improved
 - some demonstrations still rely on local/generated artifacts that should stay out of the flagship story
 - not all ideas are implemented as polished case studies yet
