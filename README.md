@@ -166,14 +166,14 @@ Generated vector stores, visualization exports, audio outputs, and local caches 
 
 ### Notebook-first workflow
 
-This repository is still primarily **notebook-first**.
+This repository is still primarily **notebook-first**, but it now also includes an emerging reusable code surface under `src/llm_portfolio/`.
 
 Recommended workflow:
 
-1. Open one flagship notebook (for example `Project5-week5.ipynb`).
-2. Create and activate a Python virtual environment.
-3. Install the packages needed by that notebook.
-4. Run the notebook from top to bottom.
+1. Create and activate a Python virtual environment.
+2. Install the minimal dependencies.
+3. Run one flagship notebook (for example `Project5-week5.ipynb`) for the end-to-end experience.
+4. Use the extracted modules in `src/llm_portfolio/` when you want reusable logic instead of notebook cells.
 5. Use the supporting `week*/` directories only when you need deeper context or experiments.
 
 ### Environment setup
@@ -181,6 +181,19 @@ Recommended workflow:
 ```bash
 python -m venv llms-env
 source llms-env/bin/activate  # On Windows: llms-env\Scripts\activate
+pip install -r requirements.txt
+```
+
+### Reusable module smoke example
+
+```bash
+python examples/synthetic_data_studio_smoke.py
+```
+
+### Packaging
+
+```bash
+pip install -e .
 ```
 
 ### Configuration
@@ -216,9 +229,8 @@ That said, the strongest completed artifacts already provide meaningful public p
 
 Short-term improvements:
 
-- extract reusable code from flagship notebooks into `.py` modules
-- improve reproducibility and dependency setup
-- clean generated artifacts from the main repo story
+- extract reusable code from the remaining flagship notebooks into `.py` modules
+- expand packaging and reproducibility beyond the first extracted Synthetic Data Studio slice
 - add stronger case-study framing, architecture notes, and demo summaries
 - isolate flagship work from archive/learning material more clearly
 
