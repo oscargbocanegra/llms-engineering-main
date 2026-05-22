@@ -130,6 +130,7 @@ week1/ ... week6/          Supporting weekly experiments and exploratory work
 knowledge-base/            Example private knowledge artifacts
 src/llm_portfolio/         Reusable code extracted from flagship case studies
 examples/                  Lightweight smoke scripts for extracted modules
+docs/EXTRACTED_MODULES.md  Notes on the extracted reusable code surface
 tests/                     Minimal tests for reusable extractions
 ```
 
@@ -189,6 +190,8 @@ pip install -r requirements.txt
 
 ### Reusable module smoke examples
 
+See also: [`docs/EXTRACTED_MODULES.md`](./docs/EXTRACTED_MODULES.md)
+
 ```bash
 python examples/synthetic_data_studio_smoke.py
 python examples/private_rag_chatbot_smoke.py
@@ -231,7 +234,7 @@ Current limitations include:
 - some demonstrations still rely on local/generated artifacts that should stay out of the flagship story
 - not all ideas are implemented as polished case studies yet
 
-That said, the strongest completed artifacts already provide meaningful public proof of applied LLM engineering work.
+That said, the strongest completed artifacts already provide meaningful public proof of applied LLM engineering work, and the extracted modules now make that engineering surface easier to inspect.
 
 ---
 
