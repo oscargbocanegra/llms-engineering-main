@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from typing import Any, Optional
 
 try:
@@ -14,6 +15,13 @@ def _value(name):
     value = globals().get(name)
     if value is not None:
         return value
+    # `%run` can execute settings and helpers in different namespaces.
+    # In notebooks, the loaded settings normally live in __main__.
+    main_module = sys.modules.get("__main__")
+    if main_module is not None:
+        value = getattr(main_module, name, None)
+        if value is not None:
+            return value
     try:
         from config import llm_settings
         return getattr(llm_settings, name)
