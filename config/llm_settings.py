@@ -98,7 +98,7 @@ openai_client = _client("https://api.openai.com/v1", OPENAI_API_KEY) if OPENAI_A
 
 # Anthropic Claude.
 ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY")
-CLAUDE_MODEL = env("CLAUDE_MODEL", "claude-3-5-sonnet-latest")
+CLAUDE_MODEL = env("CLAUDE_MODEL", "claude-opus-4-1-20250805")
 claude_client = (
     anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
     if ANTHROPIC_API_KEY and anthropic is not None
@@ -108,7 +108,7 @@ claude_client = (
 
 # Google Gemini using the current google-genai SDK.
 GOOGLE_API_KEY = env("GOOGLE_API_KEY")
-GOOGLE_MODEL = env("GOOGLE_MODEL", "gemini-2.0-flash")
+GOOGLE_MODEL = env("GOOGLE_MODEL", "Gemini 2.5 Pro")
 google_client = (
     genai.Client(api_key=GOOGLE_API_KEY)
     if GOOGLE_API_KEY and genai is not None
