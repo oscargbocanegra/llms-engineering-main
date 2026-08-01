@@ -822,6 +822,142 @@ def responder_stream(
         )
 
 
+def _chunk_text(chunk):
+    """
+    Extrae el contenido textual de un fragmento OpenAI-compatible.
+
+    Compatible con Ollama, NVIDIA NIM y OpenAI.
+    """
+    choices = getattr(chunk, "choices", None) or []
+
+    if not choices:
+        return ""
+
+    delta = getattr(choices[0], "delta", None)
+
+    if delta is None:
+        return ""
+
+    return getattr(delta, "content", None) or ""
+
+
+def stream_provider(
+    provider,
+    system_msg,
+    user_msg,
+    model=None,
+    max_tokens=1000,
+    temperature=None,
+    **kwargs,
+):
+    """
+    Streaming acumulativo para Ollama, NVIDIA NIM y OpenAI.
+    """
+    key = (
+        provider.lower()
+        .replace("-", "")
+        .replace("_", "")
+        .strip()
+    )
+
+    aliases = {
+        "ollama": "ollama",
+        "nvidia": "nvidia",
+        "nim": "nvidia",
+        "openai": "openai",
+    }
+
+    if key not in aliases:
+        raise ValueError(
+            "stream_provider soporta ollama, nvidia y openai."
+        )
+
+    provider_key = aliases[key]
+
+    names = {
+        "ollama": ("ollama_client", "OLLAMA_MODEL"),
+        "nvidia": ("nvidia_client", "NVIDIA_MODEL"),
+        "openai": ("openai_client", "OPENAI_MODEL"),
+    }
+
+    client_name, model_name = names[provider_key]
+
+    client = _value(client_name)
+    selected_model = model or _value(model_name)
+
+    if client is None:
+        raise ValueError(
+            f"El cliente de '{provider_key}' no está configurado."
+        )
+
+    if not selected_model:
+        raise ValueError(
+            f"El modelo de '{provider_key}' no está configurado."
+        )
+
+    if isinstance(max_tokens, bool):
+        raise TypeError(
+            "max_tokens debe ser un entero, no bool."
+        )
+
+    max_tokens = int(max_tokens)
+
+    if max_tokens < 1:
+        raise ValueError(
+            "max_tokens debe ser mayor que cero."
+        )
+
+    if temperature is not None:
+        if isinstance(temperature, bool):
+            raise TypeError(
+                "temperature debe ser numérico, no bool."
+            )
+
+        temperature = float(temperature)
+
+        if not 0.0 <= temperature <= 2.0:
+            raise ValueError(
+                "temperature debe estar entre 0.0 y 2.0."
+            )
+
+    messages = []
+
+    if system_msg:
+        messages.append(
+            {
+                "role": "system",
+                "content": system_msg,
+            }
+        )
+
+    messages.append(
+        {
+            "role": "user",
+            "content": user_msg,
+        }
+    )
+
+    params = {
+        "model": selected_model,
+        "messages": messages,
+        "max_tokens": max_tokens,
+        "stream": True,
+        **kwargs,
+    }
+
+    if temperature is not None:
+        params["temperature"] = temperature
+
+    response = client.chat.completions.create(**params)
+
+    accumulated = ""
+
+    for chunk in response:
+        fragment = _chunk_text(chunk)
+
+        if fragment:
+            accumulated += fragment
+            yield accumulated
 
 
 
