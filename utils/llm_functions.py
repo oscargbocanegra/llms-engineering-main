@@ -5,6 +5,8 @@ from __future__ import annotations
 import sys
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal, Optional
+from huggingface_hub import InferenceClient
+
 
 try:
     from IPython.display import Markdown, display
@@ -530,6 +532,203 @@ def call_gemini(
 callModelOllama = call_ollama
 callModelNvidia = call_nvidia
 
+def _build_nvidia_messages(
+    *,
+    prompt: Optional[str] = None,
+    messages: Optional[Sequence[Message]] = None,
+    system_msg: Optional[str] = None,
+    model: Optional[str] = None,
+) -> list[dict[str, str]]:
+    """Build messages for a generic NVIDIA NIM chat request.
+
+    DiffusionGemma currently documents ``user`` and ``assistant`` roles.
+    For that model, a system instruction is prepended to the user content
+    instead of being sent with role ``system``.
+    """
+    if messages is not None and prompt is not None:
+        raise ValueError(
+            "Use either 'prompt' or 'messages', not both."
+        )
+
+    if messages is not None:
+        normalized_messages = [
+            {
+                "role": str(message["role"]),
+                "content": str(message["content"]),
+            }
+            for message in messages
+        ]
+
+        if not normalized_messages:
+            raise ValueError("messages cannot be empty.")
+
+        return normalized_messages
+
+    normalized_prompt = (prompt or "").strip()
+    if not normalized_prompt:
+        raise ValueError("prompt must be a non-empty string.")
+
+    selected_model = (model or "").lower()
+
+    if (
+        system_msg
+        and "diffusiongemma" in selected_model
+    ):
+        normalized_prompt = (
+            f"{system_msg.strip()}\n\n"
+            f"User request:\n{normalized_prompt}"
+        )
+        return [
+            {
+                "role": "user",
+                "content": normalized_prompt,
+            }
+        ]
+
+    return _build_messages(
+        system_msg=system_msg,
+        user_msg=normalized_prompt,
+    )
+
+
+def call_nvidia_model(
+    *,
+    model: str,
+    prompt: Optional[str] = None,
+    messages: Optional[Sequence[Message]] = None,
+    system_msg: Optional[str] = None,
+    max_tokens: int = 4096,
+    temperature: float = 1.0,
+    top_p: float = 0.95,
+    enable_thinking: bool = True,
+    display_output: bool = False,
+    **kwargs: Any,
+) -> str:
+    """Call any NVIDIA NIM model exposed through chat completions.
+
+    This function returns text. A model such as
+    ``google/diffusiongemma-26b-a4b-it`` accepts multimodal input but
+    produces text output; it is not an image-generation endpoint.
+    """
+    client = _value("nvidia_client")
+
+    if client is None:
+        raise ValueError(
+            "NVIDIA client is not configured. "
+            "Set NVIDIA_API_KEY first."
+        )
+
+    if not isinstance(enable_thinking, bool):
+        raise TypeError("enable_thinking must be bool.")
+
+    normalized_top_p = float(top_p)
+    if not 0.0 < normalized_top_p <= 1.0:
+        raise ValueError("top_p must be greater than 0 and at most 1.")
+
+    request_messages = _build_nvidia_messages(
+        prompt=prompt,
+        messages=messages,
+        system_msg=system_msg,
+        model=model,
+    )
+
+    extra_body = kwargs.pop("extra_body", {}) or {}
+    chat_template_kwargs = dict(
+        extra_body.get("chat_template_kwargs", {})
+    )
+    chat_template_kwargs["enable_thinking"] = enable_thinking
+    extra_body["chat_template_kwargs"] = chat_template_kwargs
+
+    return call_model(
+        client=client,
+        model=model,
+        messages=request_messages,
+        use_stream=False,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        display_output=display_output,
+        top_p=normalized_top_p,
+        extra_body=extra_body,
+        **kwargs,
+    )
+
+
+def stream_nvidia_model(
+    *,
+    model: str,
+    prompt: Optional[str] = None,
+    messages: Optional[Sequence[Message]] = None,
+    system_msg: Optional[str] = None,
+    max_tokens: int = 4096,
+    temperature: float = 1.0,
+    top_p: float = 0.95,
+    enable_thinking: bool = True,
+    cumulative: bool = True,
+    **kwargs: Any,
+):
+    """Stream any NVIDIA NIM chat-completions model.
+
+    When ``cumulative=True`` the generator yields the full text accumulated
+    so far, which is the format expected by Gradio text components.
+    """
+    client = _value("nvidia_client")
+
+    if client is None:
+        raise ValueError(
+            "NVIDIA client is not configured. "
+            "Set NVIDIA_API_KEY first."
+        )
+
+    if not isinstance(enable_thinking, bool):
+        raise TypeError("enable_thinking must be bool.")
+
+    normalized_top_p = float(top_p)
+    if not 0.0 < normalized_top_p <= 1.0:
+        raise ValueError("top_p must be greater than 0 and at most 1.")
+
+    request_messages = _build_nvidia_messages(
+        prompt=prompt,
+        messages=messages,
+        system_msg=system_msg,
+        model=model,
+    )
+
+    extra_body = kwargs.pop("extra_body", {}) or {}
+    chat_template_kwargs = dict(
+        extra_body.get("chat_template_kwargs", {})
+    )
+    chat_template_kwargs["enable_thinking"] = enable_thinking
+    extra_body["chat_template_kwargs"] = chat_template_kwargs
+
+    params: dict[str, Any] = {
+        "model": model,
+        "messages": request_messages,
+        "stream": True,
+        "max_tokens": _normalize_max_tokens(
+            max_tokens,
+            default=4096,
+        ),
+        "temperature": _normalize_temperature(temperature),
+        "top_p": normalized_top_p,
+        "extra_body": extra_body,
+        **kwargs,
+    }
+
+    response = client.chat.completions.create(**params)
+    accumulated = ""
+
+    for chunk in response:
+        fragment = _extract_openai_chunk_text(chunk)
+
+        if not fragment:
+            continue
+
+        if cumulative:
+            accumulated += fragment
+            yield accumulated
+        else:
+            yield fragment
+
 
 def responder_llm(
     prompt: str,
@@ -966,6 +1165,8 @@ __all__ = [
     "call_provider",
     "call_ollama",
     "call_nvidia",
+    "call_nvidia_model",
+    "stream_nvidia_model",
     "call_openai",
     "call_claude",
     "call_gemini",

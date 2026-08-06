@@ -16,7 +16,6 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Optional
-
 from dotenv import load_dotenv
 
 
@@ -125,6 +124,7 @@ class LLMSettings:
     openai: ProviderConfig
     anthropic: ProviderConfig
     google: ProviderConfig
+    huggingface: ProviderConfig
     default_provider: str
     default_max_tokens: int
     request_timeout_seconds: int
@@ -178,6 +178,12 @@ def _build_settings() -> LLMSettings:
             model=env("GOOGLE_MODEL", "gemini-2.5-pro"),
             enabled=env_bool("GOOGLE_ENABLED", True),
         ),
+        huggingface=ProviderConfig(
+            name="huggingface",
+            api_key=env("HF_TOKEN"),
+            model=env("HF_MODEL","black-forest-labs/FLUX.1-schnell",),
+            enabled=env_bool("HUGGINGFACE_ENABLED",True,),
+        ),
         default_provider=(env("LLM_DEFAULT_PROVIDER", "ollama") or "ollama").lower(),
         default_max_tokens=env_int("LLM_DEFAULT_MAX_TOKENS", 1000),
         request_timeout_seconds=env_int("LLM_REQUEST_TIMEOUT_SECONDS", 120),
@@ -196,6 +202,8 @@ _PROVIDER_ALIASES = {
     "claude": "anthropic",
     "google": "google",
     "gemini": "google",
+    "huggingface": "huggingface",
+    "hf": "huggingface",
 }
 
 
@@ -302,6 +310,23 @@ def get_client(provider: str) -> Any:
             ) from error
         return genai.Client(api_key=config.api_key)
 
+    if canonical == "huggingface":
+        if not config.api_key:
+            return None
+    
+        try:
+            from huggingface_hub import InferenceClient
+        except ImportError as error:
+            raise ImportError(
+                "Hugging Face requires: "
+                "pip install huggingface_hub"
+            ) from error
+    
+        return InferenceClient(
+            api_key=config.api_key,
+            timeout=settings.request_timeout_seconds,
+        )
+
     raise AssertionError(f"Unhandled provider: {canonical}")
 
 
@@ -337,15 +362,27 @@ CLAUDE_MODEL = settings.anthropic.model
 GOOGLE_API_KEY = settings.google.api_key
 GOOGLE_MODEL = settings.google.model
 
+HF_TOKEN = settings.huggingface.api_key
+HF_MODEL = settings.huggingface.model
 
-def _safe_legacy_client(provider: str) -> Any:
-    """Return a lazy-created client or None when optional config is absent."""
+def _safe_legacy_client(provider: str,) -> Any:
+    """
+    Return a lazily created client or None when
+    optional configuration is absent.
+    """
     config = get_provider_config(provider)
+
     if provider != "ollama" and not config.api_key:
         return None
+
     try:
         return get_client(provider)
-    except (ImportError, RuntimeError):
+
+    except (
+        ImportError,
+        RuntimeError,
+        ValueError,
+    ):
         return None
 
 
@@ -354,6 +391,7 @@ nvidia_client = _safe_legacy_client("nvidia")
 openai_client = _safe_legacy_client("openai")
 claude_client = _safe_legacy_client("anthropic")
 google_client = _safe_legacy_client("google")
+huggingface_client = _safe_legacy_client("huggingface")
 
 
 __all__ = [
@@ -387,9 +425,12 @@ __all__ = [
     "CLAUDE_MODEL",
     "GOOGLE_API_KEY",
     "GOOGLE_MODEL",
+    "HF_TOKEN",
+    "HF_MODEL",
     "ollama_client",
     "nvidia_client",
     "openai_client",
     "claude_client",
     "google_client",
+    "huggingface_client",
 ]

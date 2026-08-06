@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import os
 from pathlib import Path
+from huggingface_hub import InferenceClient
 
 from dotenv import load_dotenv
 
@@ -103,6 +104,13 @@ claude_client = (
     anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
     if ANTHROPIC_API_KEY and anthropic is not None
     else None
+)
+
+# Huggingface config.
+HF_TOKEN = env("HF_TOKEN")
+HF_MODEL = env("HF_MODEL", "black-forest-labs/FLUX.1-schnell")
+hugginface_client = InferenceClient(
+    api_key=HF_TOKEN
 )
 
 
