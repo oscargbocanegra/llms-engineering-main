@@ -5,7 +5,7 @@ from __future__ import annotations
 import sys
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal, Optional
-from huggingface_hub import InferenceClient
+#from huggingface_hub import InferenceClient
 
 
 try:
@@ -978,40 +978,28 @@ def validate_loaded_clients(
 
 def responder_stream(
     prompt: str,
-    provider: str,
-    max_tokens: int,
-    temperature: float,
-    system_message: str,
+    provider: str = "ollama",
+    max_tokens: int = 1000,
+    temperature: float = 0.7,
+    system_message: str = (
+        "Eres un asistente útil, preciso y claro. "
+        "Responde siempre en español."
+    ),
 ):
+    """Streaming acumulativo compatible con un componente Gradio."""
     prompt = (prompt or "").strip()
-    provider = (provider or "").strip().lower()
 
     if not prompt:
         yield "Escribe un mensaje antes de enviar."
         return
 
     try:
-        if isinstance(max_tokens, bool):
-            raise TypeError(
-                "max_tokens no puede ser booleano."
-            )
-
-        if isinstance(temperature, bool):
-            raise TypeError(
-                "temperature no puede ser booleano."
-            )
-
-        request = LLMRequest(
-            user_message=prompt,
-            system_message=system_message,
-            provider=provider,
-            max_tokens=int(max_tokens),
-            temperature=float(temperature),
-        )
-
         yield from stream_provider(
-            request,
-            cumulative=True,
+            provider=provider,
+            system_msg=system_message,
+            user_msg=prompt,
+            max_tokens=_normalize_max_tokens(max_tokens, default=1000),
+            temperature=_normalize_temperature(temperature),
         )
 
     except Exception as error:
@@ -1176,4 +1164,6 @@ __all__ = [
     "make_gradio_responder",
     "validate_client",
     "validate_loaded_clients",
+    "responder_stream",
+    "stream_provider",
 ]

@@ -189,7 +189,6 @@ def _build_settings() -> LLMSettings:
         request_timeout_seconds=env_int("LLM_REQUEST_TIMEOUT_SECONDS", 120),
     )
 
-
 settings = _build_settings()
 
 
@@ -349,6 +348,12 @@ OLLAMA_MODEL_LLAMA = env("OLLAMA_MODEL_LLAMA", "qwen3.5:9b")
 OLLAMA_MODEL = settings.ollama.model
 OLLAMA_HEADERS = _basic_auth_headers(OLLAMA_USERNAME, OLLAMA_PASSWORD)
 
+# Audio local
+BASE_URL_AUDIO = env("BASE_URL_AUDIO","http://192.168.80.14:8000",)
+MODEL_KOKORO = env("MODEL_KOKORO","speaches-ai/Kokoro-82M-v1.0-ONNX-int8",)
+MODEL_PIPER_CLAUDE = env("MODEL_PIPER_CLAUDE","speaches-ai/piper-es_MX-claude-high",)
+MODEL_PIPEL_DANIELA = env("MODEL_PIPEL_DANIELA","it-lab/piper-es_AR-daniela-high",)
+
 NVIDIA_BASE_URL = settings.nvidia.base_url
 NVIDIA_API_KEY = settings.nvidia.api_key
 NVIDIA_MODEL = settings.nvidia.model
@@ -433,4 +438,8 @@ __all__ = [
     "claude_client",
     "google_client",
     "huggingface_client",
+    "BASE_URL_AUDIO",
+    "MODEL_KOKORO",
+    "MODEL_PIPER_CLAUDE",
+    "MODEL_PIPEL_DANIELA",
 ]
