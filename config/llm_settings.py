@@ -354,9 +354,11 @@ MODEL_KOKORO = env("MODEL_KOKORO","speaches-ai/Kokoro-82M-v1.0-ONNX-int8",)
 MODEL_PIPER_CLAUDE = env("MODEL_PIPER_CLAUDE","speaches-ai/piper-es_MX-claude-high",)
 MODEL_PIPEL_DANIELA = env("MODEL_PIPEL_DANIELA","it-lab/piper-es_AR-daniela-high",)
 
+
 NVIDIA_BASE_URL = settings.nvidia.base_url
 NVIDIA_API_KEY = settings.nvidia.api_key
 NVIDIA_MODEL = settings.nvidia.model
+NVIDIA_MODEL_NEMOTRON = env("NVIDIA_MODEL_NEMOTRON","nvidia/nemotron-3.5-lightning-30b-a3b")
 
 OPENAI_API_KEY = settings.openai.api_key
 OPENAI_MODEL = settings.openai.model
