@@ -86,6 +86,7 @@ week5/vector_db/
 week2/*.mp3
 week2/*.wav
 week6/*.pkl
+classes/week6/*.pkl
 
 # Gradio
 .gradio/
