@@ -18,6 +18,31 @@ from pathlib import Path
 from typing import Any, Optional
 from dotenv import load_dotenv
 
+_PROVIDER_ALIASES = {
+    "ollama": "ollama",
+    "nvidia": "nvidia",
+    "nim": "nvidia",
+    "openai": "openai",
+    "anthropic": "anthropic",
+    "claude": "anthropic",
+    "google": "google",
+    "gemini": "google",
+    "huggingface": "huggingface",
+    "hf": "huggingface",
+}
+
+_DEFAULTS = {
+    "ollama_base_url": "http://localhost:11434",
+    "ollama_model": "gemma4:12b",
+    "nvidia_base_url": "https://integrate.api.nvidia.com/v1",
+    "nvidia_model": "z-ai/glm-5.2",
+    "openai_base_url": "https://api.openai.com/v1",
+    "openai_model": "gpt-4o-mini",
+    "anthropic_model": "claude-opus-4-1-20250805",
+    "google_model": "gemini-2.5-pro",
+    "huggingface_model": "black-forest-labs/FLUX.1-schnell",
+}
+
 
 def env(name: str, default: Optional[str] = None) -> Optional[str]:
     """Read and trim an environment variable."""
@@ -60,6 +85,25 @@ def env_int(name: str, default: int) -> int:
         raise ValueError(f"{name} must be greater than zero.")
 
     return value
+
+
+def normalize_provider(provider: str) -> str:
+    """Normalize aliases to the canonical provider name."""
+    if not isinstance(provider, str) or not provider.strip():
+        raise ValueError("provider must be a non-empty string.")
+
+    key = provider.lower().replace("-", "").replace("_", "").strip()
+    try:
+        return _PROVIDER_ALIASES[key]
+    except KeyError as error:
+        supported = ", ".join(sorted(_PROVIDER_ALIASES))
+        raise ValueError(
+            f"Unsupported provider '{provider}'. Supported values: {supported}."
+        ) from error
+
+
+def _trim_url(value: Optional[str]) -> Optional[str]:
+    return value.rstrip("/") if value else value
 
 
 def _load_environment() -> Optional[Path]:
@@ -132,7 +176,9 @@ class LLMSettings:
 
 def _build_settings() -> LLMSettings:
     """Build settings once after loading the environment."""
-    ollama_base = (env("OLLAMA_BASE_URL", "http://localhost:11434") or "").rstrip("/")
+    ollama_base = _trim_url(
+        env("OLLAMA_BASE_URL", _DEFAULTS["ollama_base_url"])
+    )
 
     return LLMSettings(
         ollama=ProviderConfig(
@@ -142,80 +188,57 @@ def _build_settings() -> LLMSettings:
             username=env("OLLAMA_USERNAME"),
             password=env("OLLAMA_PASSWORD"),
             # Existing defaults are preserved for notebook compatibility.
-            model=env("OLLAMA_MODEL", env("OLLAMA_MODEL_GEMMA", "gemma4:12b")),
+            model=env(
+                "OLLAMA_MODEL",
+                env("OLLAMA_MODEL_GEMMA", _DEFAULTS["ollama_model"]),
+            ),
             enabled=env_bool("OLLAMA_ENABLED", True),
         ),
         nvidia=ProviderConfig(
             name="nvidia",
-            base_url=(env(
-                "NVIDIA_BASE_URL",
-                "https://integrate.api.nvidia.com/v1",
-            ) or "").rstrip("/"),
+            base_url=_trim_url(
+                env("NVIDIA_BASE_URL", _DEFAULTS["nvidia_base_url"])
+            ),
             api_key=env("NVIDIA_API_KEY"),
-            model=env("NVIDIA_MODEL", "z-ai/glm-5.2"),
+            model=env("NVIDIA_MODEL", _DEFAULTS["nvidia_model"]),
             enabled=env_bool("NVIDIA_ENABLED", True),
         ),
         openai=ProviderConfig(
             name="openai",
-            base_url=(env(
-                "OPENAI_BASE_URL",
-                "https://api.openai.com/v1",
-            ) or "").rstrip("/"),
+            base_url=_trim_url(
+                env("OPENAI_BASE_URL", _DEFAULTS["openai_base_url"])
+            ),
             api_key=env("OPENAI_API_KEY"),
-            model=env("OPENAI_MODEL", "gpt-4o-mini"),
+            model=env("OPENAI_MODEL", _DEFAULTS["openai_model"]),
             enabled=env_bool("OPENAI_ENABLED", True),
         ),
         anthropic=ProviderConfig(
             name="anthropic",
             api_key=env("ANTHROPIC_API_KEY"),
-            model=env("CLAUDE_MODEL", "claude-opus-4-1-20250805"),
+            model=env("CLAUDE_MODEL", _DEFAULTS["anthropic_model"]),
             enabled=env_bool("ANTHROPIC_ENABLED", True),
         ),
         google=ProviderConfig(
             name="google",
             api_key=env("GOOGLE_API_KEY"),
             # API model identifiers should be supplied through GOOGLE_MODEL.
-            model=env("GOOGLE_MODEL", "gemini-2.5-pro"),
+            model=env("GOOGLE_MODEL", _DEFAULTS["google_model"]),
             enabled=env_bool("GOOGLE_ENABLED", True),
         ),
         huggingface=ProviderConfig(
             name="huggingface",
             api_key=env("HF_TOKEN"),
-            model=env("HF_MODEL","black-forest-labs/FLUX.1-schnell",),
-            enabled=env_bool("HUGGINGFACE_ENABLED",True,),
+            model=env("HF_MODEL", _DEFAULTS["huggingface_model"]),
+            enabled=env_bool("HUGGINGFACE_ENABLED", True),
         ),
-        default_provider=(env("LLM_DEFAULT_PROVIDER", "ollama") or "ollama").lower(),
+        default_provider=normalize_provider(
+            env("LLM_DEFAULT_PROVIDER", "ollama") or "ollama"
+        ),
         default_max_tokens=env_int("LLM_DEFAULT_MAX_TOKENS", 1000),
         request_timeout_seconds=env_int("LLM_REQUEST_TIMEOUT_SECONDS", 120),
     )
 
 settings = _build_settings()
-
-
-_PROVIDER_ALIASES = {
-    "ollama": "ollama",
-    "nvidia": "nvidia",
-    "nim": "nvidia",
-    "openai": "openai",
-    "anthropic": "anthropic",
-    "claude": "anthropic",
-    "google": "google",
-    "gemini": "google",
-    "huggingface": "huggingface",
-    "hf": "huggingface",
-}
-
-
-def normalize_provider(provider: str) -> str:
-    """Normalize aliases to the canonical provider name."""
-    if not isinstance(provider, str) or not provider.strip():
-        raise ValueError("provider must be a non-empty string.")
-
-    key = provider.lower().replace("-", "").replace("_", "").strip()
-    try:
-        return _PROVIDER_ALIASES[key]
-    except KeyError as error:
-        raise ValueError(f"Unsupported provider: {provider}") from error
 
 
 def get_provider_config(provider: str) -> ProviderConfig:
@@ -372,18 +395,19 @@ GOOGLE_MODEL = settings.google.model
 HF_TOKEN = settings.huggingface.api_key
 HF_MODEL = settings.huggingface.model
 
-def _safe_legacy_client(provider: str,) -> Any:
+def _safe_legacy_client(provider: str) -> Any:
     """
     Return a lazily created client or None when
     optional configuration is absent.
     """
-    config = get_provider_config(provider)
+    canonical = normalize_provider(provider)
+    config = get_provider_config(canonical)
 
-    if provider != "ollama" and not config.api_key:
+    if canonical != "ollama" and not config.api_key:
         return None
 
     try:
-        return get_client(provider)
+        return get_client(canonical)
 
     except (
         ImportError,

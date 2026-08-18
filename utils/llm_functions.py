@@ -5,7 +5,6 @@ from __future__ import annotations
 import sys
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal, Optional
-#from huggingface_hub import InferenceClient
 
 
 try:
@@ -385,8 +384,8 @@ def _call_google(
 
 def call_provider(
     provider: ProviderName | str,
-    system_msg: Optional[str],
-    user_msg: str,
+    system_msg: Optional[str] = None,
+    user_msg: str = "",
     *,
     model: Optional[str] = None,
     stream: bool = False,
@@ -445,8 +444,8 @@ def call_provider(
 
 
 def call_ollama(
-    system_msg: Optional[str],
-    user_msg: str,
+    system_msg: Optional[str] = None,
+    user_msg: str = "",
     max_tokens: Optional[int] = 100,
     stream: bool = False,
     **kwargs: Any,
@@ -462,8 +461,8 @@ def call_ollama(
 
 
 def call_nvidia(
-    system_msg: Optional[str],
-    user_msg: str,
+    system_msg: Optional[str] = None,
+    user_msg: str = "",
     max_tokens: Optional[int] = 100,
     stream: bool = False,
     **kwargs: Any,
@@ -479,8 +478,8 @@ def call_nvidia(
 
 
 def call_openai(
-    system_msg: Optional[str],
-    user_msg: str,
+    system_msg: Optional[str] = None,
+    user_msg: str = "",
     max_tokens: Optional[int] = 100,
     stream: bool = False,
     **kwargs: Any,
@@ -496,8 +495,8 @@ def call_openai(
 
 
 def call_claude(
-    system_msg: Optional[str],
-    user_msg: str,
+    system_msg: Optional[str] = None,
+    user_msg: str = "",
     max_tokens: Optional[int] = 100,
     stream: bool = False,
     **kwargs: Any,
@@ -513,8 +512,8 @@ def call_claude(
 
 
 def call_gemini(
-    system_msg: Optional[str],
-    user_msg: str,
+    system_msg: Optional[str] = None,
+    user_msg: str = "",
     max_tokens: Optional[int] = 100,
     stream: bool = False,
     **kwargs: Any,
@@ -591,6 +590,65 @@ def _build_nvidia_messages(
     )
 
 
+def _nvidia_request_options(
+    *,
+    max_tokens: int,
+    temperature: float,
+    top_p: float,
+    enable_thinking: bool,
+    extra_body: Optional[Mapping[str, Any]] = None,
+) -> dict[str, Any]:
+    if not isinstance(enable_thinking, bool):
+        raise TypeError("enable_thinking must be bool.")
+
+    normalized_top_p = float(top_p)
+    if not 0.0 < normalized_top_p <= 1.0:
+        raise ValueError("top_p must be greater than 0 and at most 1.")
+
+    normalized_extra_body = dict(extra_body or {})
+    chat_template_kwargs = dict(
+        normalized_extra_body.get("chat_template_kwargs", {})
+    )
+    chat_template_kwargs["enable_thinking"] = enable_thinking
+    normalized_extra_body["chat_template_kwargs"] = chat_template_kwargs
+
+    return {
+        "max_tokens": _normalize_max_tokens(max_tokens, default=4096),
+        "temperature": _normalize_temperature(temperature),
+        "top_p": normalized_top_p,
+        "extra_body": normalized_extra_body,
+    }
+
+
+def _stream_openai_compatible(
+    *,
+    client: Any,
+    model: str,
+    messages: Sequence[Message],
+    cumulative: bool = True,
+    **kwargs: Any,
+):
+    params = {
+        "model": model,
+        "messages": list(messages),
+        "stream": True,
+        **kwargs,
+    }
+    response = client.chat.completions.create(**params)
+    accumulated = ""
+
+    for chunk in response:
+        fragment = _extract_openai_chunk_text(chunk)
+        if not fragment:
+            continue
+
+        if cumulative:
+            accumulated += fragment
+            yield accumulated
+        else:
+            yield fragment
+
+
 def call_nvidia_model(
     *,
     model: str,
@@ -618,13 +676,6 @@ def call_nvidia_model(
             "Set NVIDIA_API_KEY first."
         )
 
-    if not isinstance(enable_thinking, bool):
-        raise TypeError("enable_thinking must be bool.")
-
-    normalized_top_p = float(top_p)
-    if not 0.0 < normalized_top_p <= 1.0:
-        raise ValueError("top_p must be greater than 0 and at most 1.")
-
     request_messages = _build_nvidia_messages(
         prompt=prompt,
         messages=messages,
@@ -632,23 +683,23 @@ def call_nvidia_model(
         model=model,
     )
 
-    extra_body = kwargs.pop("extra_body", {}) or {}
-    chat_template_kwargs = dict(
-        extra_body.get("chat_template_kwargs", {})
+    request_options = _nvidia_request_options(
+        max_tokens=max_tokens,
+        temperature=temperature,
+        top_p=top_p,
+        enable_thinking=enable_thinking,
+        extra_body=kwargs.pop("extra_body", None),
     )
-    chat_template_kwargs["enable_thinking"] = enable_thinking
-    extra_body["chat_template_kwargs"] = chat_template_kwargs
 
     return call_model(
         client=client,
         model=model,
         messages=request_messages,
         use_stream=False,
-        temperature=temperature,
-        max_tokens=max_tokens,
+        temperature=request_options.pop("temperature"),
+        max_tokens=request_options.pop("max_tokens"),
         display_output=display_output,
-        top_p=normalized_top_p,
-        extra_body=extra_body,
+        **request_options,
         **kwargs,
     )
 
@@ -679,13 +730,6 @@ def stream_nvidia_model(
             "Set NVIDIA_API_KEY first."
         )
 
-    if not isinstance(enable_thinking, bool):
-        raise TypeError("enable_thinking must be bool.")
-
-    normalized_top_p = float(top_p)
-    if not 0.0 < normalized_top_p <= 1.0:
-        raise ValueError("top_p must be greater than 0 and at most 1.")
-
     request_messages = _build_nvidia_messages(
         prompt=prompt,
         messages=messages,
@@ -693,41 +737,22 @@ def stream_nvidia_model(
         model=model,
     )
 
-    extra_body = kwargs.pop("extra_body", {}) or {}
-    chat_template_kwargs = dict(
-        extra_body.get("chat_template_kwargs", {})
+    request_options = _nvidia_request_options(
+        max_tokens=max_tokens,
+        temperature=temperature,
+        top_p=top_p,
+        enable_thinking=enable_thinking,
+        extra_body=kwargs.pop("extra_body", None),
     )
-    chat_template_kwargs["enable_thinking"] = enable_thinking
-    extra_body["chat_template_kwargs"] = chat_template_kwargs
 
-    params: dict[str, Any] = {
-        "model": model,
-        "messages": request_messages,
-        "stream": True,
-        "max_tokens": _normalize_max_tokens(
-            max_tokens,
-            default=4096,
-        ),
-        "temperature": _normalize_temperature(temperature),
-        "top_p": normalized_top_p,
-        "extra_body": extra_body,
+    yield from _stream_openai_compatible(
+        client=client,
+        model=model,
+        messages=request_messages,
+        cumulative=cumulative,
+        **request_options,
         **kwargs,
-    }
-
-    response = client.chat.completions.create(**params)
-    accumulated = ""
-
-    for chunk in response:
-        fragment = _extract_openai_chunk_text(chunk)
-
-        if not fragment:
-            continue
-
-        if cumulative:
-            accumulated += fragment
-            yield accumulated
-        else:
-            yield fragment
+    )
 
 
 def responder_llm(
@@ -1009,142 +1034,45 @@ def responder_stream(
         )
 
 
-def _chunk_text(chunk):
-    """
-    Extrae el contenido textual de un fragmento OpenAI-compatible.
-
-    Compatible con Ollama, NVIDIA NIM y OpenAI.
-    """
-    choices = getattr(chunk, "choices", None) or []
-
-    if not choices:
-        return ""
-
-    delta = getattr(choices[0], "delta", None)
-
-    if delta is None:
-        return ""
-
-    return getattr(delta, "content", None) or ""
-
-
 def stream_provider(
-    provider,
-    system_msg,
-    user_msg,
-    model=None,
-    max_tokens=1000,
-    temperature=None,
-    **kwargs,
+    provider: ProviderName | str,
+    system_msg: Optional[str] = None,
+    user_msg: str = "",
+    model: Optional[str] = None,
+    max_tokens: Optional[int] = 1000,
+    temperature: Optional[float] = None,
+    **kwargs: Any,
 ):
-    """
-    Streaming acumulativo para Ollama, NVIDIA NIM y OpenAI.
-    """
-    key = (
-        provider.lower()
-        .replace("-", "")
-        .replace("_", "")
-        .strip()
-    )
-
-    aliases = {
-        "ollama": "ollama",
-        "nvidia": "nvidia",
-        "nim": "nvidia",
-        "openai": "openai",
-    }
-
-    if key not in aliases:
+    """Stream accumulated text from an OpenAI-compatible provider."""
+    normalized_provider = _normalize_provider(provider)
+    if normalized_provider not in _OPENAI_COMPATIBLE_PROVIDERS:
         raise ValueError(
             "stream_provider soporta ollama, nvidia y openai."
         )
 
-    provider_key = aliases[key]
-
-    names = {
-        "ollama": ("ollama_client", "OLLAMA_MODEL"),
-        "nvidia": ("nvidia_client", "NVIDIA_MODEL"),
-        "openai": ("openai_client", "OPENAI_MODEL"),
-    }
-
-    client_name, model_name = names[provider_key]
-
+    client_name, model_name = _OPENAI_COMPATIBLE_PROVIDERS[
+        normalized_provider
+    ]
     client = _value(client_name)
     selected_model = model or _value(model_name)
 
     if client is None:
         raise ValueError(
-            f"El cliente de '{provider_key}' no está configurado."
+            f"El cliente de '{normalized_provider}' no está configurado."
         )
-
     if not selected_model:
         raise ValueError(
-            f"El modelo de '{provider_key}' no está configurado."
+            f"El modelo de '{normalized_provider}' no está configurado."
         )
 
-    if isinstance(max_tokens, bool):
-        raise TypeError(
-            "max_tokens debe ser un entero, no bool."
-        )
-
-    max_tokens = int(max_tokens)
-
-    if max_tokens < 1:
-        raise ValueError(
-            "max_tokens debe ser mayor que cero."
-        )
-
-    if temperature is not None:
-        if isinstance(temperature, bool):
-            raise TypeError(
-                "temperature debe ser numérico, no bool."
-            )
-
-        temperature = float(temperature)
-
-        if not 0.0 <= temperature <= 2.0:
-            raise ValueError(
-                "temperature debe estar entre 0.0 y 2.0."
-            )
-
-    messages = []
-
-    if system_msg:
-        messages.append(
-            {
-                "role": "system",
-                "content": system_msg,
-            }
-        )
-
-    messages.append(
-        {
-            "role": "user",
-            "content": user_msg,
-        }
-    )
-
-    params = {
-        "model": selected_model,
-        "messages": messages,
-        "max_tokens": max_tokens,
-        "stream": True,
+    yield from _stream_openai_compatible(
+        client=client,
+        model=selected_model,
+        messages=_build_messages(system_msg, user_msg),
+        max_tokens=_normalize_max_tokens(max_tokens),
+        temperature=_normalize_temperature(temperature),
         **kwargs,
-    }
-
-    if temperature is not None:
-        params["temperature"] = temperature
-
-    response = client.chat.completions.create(**params)
-
-    accumulated = ""
-
-    for chunk in response:
-        fragment = _chunk_text(chunk)
-
-        if fragment:
-            accumulated += fragment
-            yield accumulated
+    )
 
 
 
