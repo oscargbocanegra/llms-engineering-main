@@ -1,54 +1,58 @@
 #include <iostream>
 #include <vector>
-#include <limits>
 #include <chrono>
-#include <iomanip>
+#include <limits>
+#include <cstdlib>
+
+using namespace std;
 
 class LCG {
-private:
-    uint64_t value;
-    static constexpr uint64_t A = 1664525;
-    static constexpr uint64_t C = 1013904223;
-    static constexpr uint64_t M = 1ULL << 32;
-
 public:
-    LCG(uint64_t seed) : value(seed) {}
+    LCG(unsigned long long seed, unsigned long long a = 1664525, unsigned long long c = 1013904223, unsigned long long m = 1ULL << 32)
+        : current(seed), a(a), c(c), m(m) {}
 
-    uint64_t next() {
-        value = (A * value + C) % M;
-        return value;
+    unsigned long long next() {
+        current = (a * current + c) % m;
+        return current;
     }
+
+private:
+    unsigned long long current, a, c, m;
 };
 
-int64_t max_subarray_sum(int n, uint64_t seed, int min_val, int max_val) {
+// Función para calcular la Suma Máxima del Subarray
+long long max_subarray_sum(int n, unsigned long long seed, int min_val, int max_val) {
     LCG lcg(seed);
-    std::vector<int> random_numbers(n);
-
-    // Generar números aleatorios
+    vector<int> random_numbers(n);
+    
+    // Genera 'n' números pseudoaleatorios
     for (int i = 0; i < n; ++i) {
         random_numbers[i] = (lcg.next() % (max_val - min_val + 1)) + min_val;
     }
 
-    int64_t max_sum = std::numeric_limits<int64_t>::min();
+    long long max_sum = numeric_limits<long long>::min(); // Inicializa con menos infinito
 
-    // Algoritmo de suma máxima de subarray O(n^2)
+    // Bucle de fuerza bruta O(n^2)
     for (int i = 0; i < n; ++i) {
-        int64_t current_sum = 0;
+        long long current_sum = 0;
         for (int j = i; j < n; ++j) {
             current_sum += random_numbers[j];
-            max_sum = std::max(max_sum, current_sum);
+            if (current_sum > max_sum) {
+                max_sum = current_sum;
+            }
         }
     }
 
     return max_sum;
 }
 
-int64_t total_max_subarray_sum(int n, uint64_t initial_seed, int min_val, int max_val) {
+// Función para ejecutar 'max_subarray_sum' 20 veces
+long long total_max_subarray_sum(int n, unsigned long long initial_seed, int min_val, int max_val) {
+    long long total_sum = 0;
     LCG lcg(initial_seed);
-    int64_t total_sum = 0;
 
     for (int i = 0; i < 20; ++i) {
-        uint64_t seed = lcg.next();
+        unsigned long long seed = lcg.next();
         total_sum += max_subarray_sum(n, seed, min_val, max_val);
     }
 
@@ -56,24 +60,27 @@ int64_t total_max_subarray_sum(int n, uint64_t initial_seed, int min_val, int ma
 }
 
 int main() {
-    const int n = 10000;
-    const uint64_t initial_seed = 42;
-    const int min_val = -10;
-    const int max_val = 10;
+    // --- Parámetros ---
+    int n = 10000;            // Número de random numbers (longitud del array)
+    unsigned long long initial_seed = 42;   // Initial seed para el LCG principal
+    int min_val = -10;        // Minimum value of random numbers
+    int max_val = 10;         // Maximum value of random numbers
 
-    std::cout << "Iniciando cálculo para N=" << n << " y 20 corridas..." << std::endl;
+    cout << "Iniciando cálculo para N=" << n << " y 20 corridas..." << endl;
 
-    auto start_time = std::chrono::high_resolution_clock::now();
+    auto start_time = chrono::high_resolution_clock::now();
 
-    int64_t result = total_max_subarray_sum(n, initial_seed, min_val, max_val);
+    // Llama a la función principal que realiza las 20 corridas
+    long long result = total_max_subarray_sum(n, initial_seed, min_val, max_val);
 
-    auto end_time = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> duration = end_time - start_time;
+    auto end_time = chrono::high_resolution_clock::now();
+    chrono::duration<double> execution_time = end_time - start_time;
 
-    std::cout << std::string(40, '-') << std::endl;
-    std::cout << "Total Maximum Subarray Sum (20 runs): " << result << std::endl;
-    std::cout << "Execution Time: " << std::fixed << std::setprecision(6) << duration.count() << " seconds" << std::endl;
-    std::cout << std::string(40, '-') << std::endl;
+    // --- Resultados ---
+    cout << string(40, '-') << endl;
+    cout << "Total Maximum Subarray Sum (20 runs): " << result << endl;
+    cout << "Execution Time: " << execution_time.count() << " seconds" << endl;
+    cout << string(40, '-') << endl;
 
     return 0;
 }
